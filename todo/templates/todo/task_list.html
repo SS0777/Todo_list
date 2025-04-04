@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow">
+    <h2 class="text-2xl font-bold text-center mb-4">📋 할 일 목록</h2>
+
+    <div class="text-center mb-6">
+        <a href="{% url 'task_create' %}" class="bg-green-500 text-white px-4 py-2 rounded shadow hover:bg-green-600">
+            ✍ 할 일 작성하기
+        </a>
+    </div>
+
+    {% if tasks %}
+        <ul class="space-y-4">
+            {% for task in tasks %}
+                <li class="p-4 border rounded shadow 
+                    {% if task.completed %} bg-gray-300 line-through {% endif %}
+                    {% if task.due_date and task.due_date < warning_date %} bg-red-200 {% endif %}">
+
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg font-semibold {% if task.completed %}text-gray-500{% endif %}">
+                                {{ task.title }}
+                            </h3>
+                            {% if task.description %}
+                                <p class="text-sm text-gray-600">{{ task.description }}</p>
+                            {% endif %}
+                            <p class="text-sm text-blue-500 font-semibold">📆 작성: {{ task.created_at|date:"Y년 m월 d일 H:i" }}</p>
+                            <p class="text-sm text-green-500 font-semibold">✏ 수정: {{ task.updated_at|date:"Y년 m월 d일 H:i" }}</p>
+                            {% if task.due_date %}
+                                <p class="text-sm text-red-500 font-semibold">🗓 마감 기한: {{ task.due_date|date:"Y년 m월 d일" }}</p>
+                            {% endif %}
+
+                            <p class="text-sm font-semibold">
+                                {% if task.priority == "high" %}
+                                    <span class="text-red-500">🔴 높음</span>
+                                {% elif task.priority == "medium" %}
+                                    <span class="text-orange-500">🟠 중간</span>
+                                {% else %}
+                                    <span class="text-green-500">🟢 낮음</span>
+                                {% endif %}
+                            </p>
+
+                            <form method="post" action="{% url 'task_toggle_complete' task.id %}" class="inline">
+                                {% csrf_token %}
+                                <button type="submit" class="text-white px-3 py-1 rounded {% if task.completed %} bg-gray-500 {% else %} bg-green-500 {% endif %}">
+                                    {% if task.completed %} ✅ 완료됨 {% else %} 🔄 완료 체크 {% endif %}
+                                </button>
+                            </form>
+                        </div>
+
+                        <div class="flex space-x-2">
+                            <a href="{% url 'task_update' task.id %}" class="text-blue-500 hover:underline">✏ 수정</a>
+                            <a href="{% url 'task_delete' task.id %}" class="text-red-500 hover:underline">🗑 삭제</a>
+                        </div>
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="text-center text-gray-500">아직 추가된 할 일이 없습니다.</p>
+    {% endif %}
+</div>
+
+{% if user.is_authenticated %}
+    <div class="text-center mt-6">
+        <form action="{% url 'logout' %}" method="post" class="inline">
+            {% csrf_token %}
+            <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded shadow hover:bg-red-600">
+                🚪 로그아웃
+            </button>
+        </form>    
+
+        <form action="{% url 'delete_account' %}" method="post" class="inline">
+            {% csrf_token %}
+            <button type="submit" class="bg-red-700 text-white px-4 py-2 rounded shadow hover:bg-red-800">
+                ❌ 회원 탈퇴
+            </button>
+        </form>
+    </div>
+{% else %}
+    <div class="text-center mt-6">
+        <a href="{% url 'login' %}" class="bg-green-500 text-white px-4 py-2 rounded shadow hover:bg-green-600 inline-block">
+            🔑 로그인
+        </a>
+        <a href="{% url 'signup' %}" class="bg-blue-500 text-white px-4 py-2 rounded shadow hover:bg-blue-600 inline-block ml-2">
+            📝 회원가입
+        </a>
+    </div>
+{% endif %}
+
+{% endblock %}
+
